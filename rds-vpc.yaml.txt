@@ -1,0 +1,80 @@
+# Description of what this change includes
+# Revision number
+# Date
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  CloudFormation template to create a VPC spanning 3 AZs in us-west-2
+  with the name VPC-CHADAV4142.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: VPC-CHADAV4142
+    Description: Name of the VPC
+
+Conditions:
+  IsUsWest2: !Equals [ !Ref "AWS::Region", "us-west-2" ]
+
+Resources:
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Condition: IsUsWest2
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  # --- Subnets across 3 Availability Zones ---
+  SubnetAZ1:
+    Type: AWS::EC2::Subnet
+    Condition: IsUsWest2
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs "us-west-2"]
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-Subnet-AZ1"
+
+  SubnetAZ2:
+    Type: AWS::EC2::Subnet
+    Condition: IsUsWest2
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs "us-west-2"]
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-Subnet-AZ2"
+
+  SubnetAZ3:
+    Type: AWS::EC2::Subnet
+    Condition: IsUsWest2
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [2, !GetAZs "us-west-2"]
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-Subnet-AZ3"
+
+Outputs:
+  VPCId:
+    Description: ID of the created VPC
+    Value: !Ref VPC
+
+  Subnet1Id:
+    Description: Subnet ID for AZ1
+    Value: !Ref SubnetAZ1
+
+  Subnet2Id:
+    Description: Subnet ID for AZ2
+    Value: !Ref SubnetAZ2
+
+  Subnet3Id:
+    Description: Subnet ID for AZ3
+    Value: !Ref SubnetAZ3
